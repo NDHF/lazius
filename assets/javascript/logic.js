@@ -17,7 +17,7 @@ var inventory = [{
         Location: "Main Bookshelf"
     },
     {
-        Title: "The Tale of Despereaux",
+        Title: "Tale of Despereaux, The",
         Author: "DiCamillo, Kate",
         Subject: "Fiction",
         SubSubject: "Children's Fiction",
@@ -146,7 +146,15 @@ function counterLogic() {
     }
 };
 
+function resetValues() {
+    counter = undefined;
+    itemPropertyInput = [];
+    searchInputArray = [];
+};
+
 function searchInventory() {
+    $("input#searchInputDivInput").prop('disabled', false);
+    var searchResults = [];
     console.log("The searchInventory function was called!");
     console.log(itemSearchPrompts.length);
     if (counter === undefined) {
@@ -161,15 +169,32 @@ function searchInventory() {
     console.log(searchInputArray);
     console.log(searchInputArray[counter]);
     if (counter === itemSearchPrompts.length) {
+        $("p#searchInputDivPrompt").html("Hit 'Enter' to search again.");
+        $("input#searchInputDivInput").prop('disabled', true);
         if (searchInputArray[0] === "") {
             searchInputArray.shift();
         }
         for (var i = 0; i < inventory.length; i++) {
-            if ((inventory[i][searchInputArray[0]] === searchInputArray[1]) && (inventory[i][searchInputArray[2]] === searchInputArray[3])) {
-                console.log(inventory[i]);
+            if (searchInputArray[2] !== "no") {
+                if ((inventory[i][searchInputArray[0]] === searchInputArray[1]) && (inventory[i][searchInputArray[2]] === searchInputArray[3])) {
+                    searchResults.push(inventory[i]);
+                } 
+            } else if (searchInputArray[2] === "no") {
+                if (inventory[i][searchInputArray[0]] === searchInputArray[1]) {
+                    searchResults.push(inventory[i]);
+                }
+            }
+        }
+        if (searchResults.length > 0) {
+            console.log(searchResults.length + " results found.");
+            console.log(searchResults);
+            searchResults = [];
+            resetValues();
+        } else if (searchResults.length === 0) {
+            console.log("No results found.");            
+            resetValues();
         }
     }
-}
 };
 
 function getInformation() {
