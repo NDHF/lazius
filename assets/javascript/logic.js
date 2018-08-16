@@ -7,28 +7,36 @@ var inventory = [{
         Author: "Melville, Herman",
         Subject: "Fiction",
         SubSubject: "Classics",
-        Location: "Closet Bookshelf"
+        Location: "Closet Bookshelf",
+        Quantity: 1,
+        ID: 1 
     },
     {
         Title: "Desperation",
         Author: "King, Stephen",
         Subject: "Fiction",
         SubSubject: "Classics",
-        Location: "Main Bookshelf"
+        Location: "Main Bookshelf",
+        Quantity: 1,
+        ID: 2
     },
     {
         Title: "Tale of Despereaux, The",
         Author: "DiCamillo, Kate",
         Subject: "Fiction",
         SubSubject: "Children's Fiction",
-        Location: "Main Bookshelf"
+        Location: "Main Bookshelf",
+        Quantity: 2,
+        ID: 3
     },
     {
         Title: "Zen and the Art of Motorcycle Maintenance",
         Author: "Pirsig, Robert M.",
         Subject: "Philosophy",
         SubSubject: "Metaphysics of Quality",
-        Location: "Main Bookshelf"
+        Location: "Main Bookshelf",
+        Quantity: 1,
+        ID: 4
     }
 ];
 
@@ -41,13 +49,23 @@ var itemSearchPrompts = [
     "What is the value of that parameter?"
 ];
 
+var editQuantityPromptArray = [
+    "Enter item ID:",
+    "Would you like to add or deduct?",
+    "By how many?"
+];
+
+var add;
+
 var searchInputArray = [];
 
-var itemParameters = ["Title", "Author", "Subject", "Sub-subject", "Location"];
+var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Quantity"];
 
 var itemPropertyInput = [];
 
 var counter;
+
+programStart();
 
 function createInputDiv(divID, inputPromptID, inputPromptString, inputID) {
     var searchField = $("<div>");
@@ -59,41 +77,49 @@ function createInputDiv(divID, inputPromptID, inputPromptString, inputID) {
     searchField.append(searchInput);
     var textInput = $("<input>");
     textInput.attr("type", "text");
-    textInput.attr("class", "inline");
     textInput.attr("id", inputID);
     textInput.attr("class", "activeTextInput");
     searchField.append(textInput);
-
     searchField.insertBefore("div#commandMenuDiv");
 };
 
-function createMenuInputDiv() {
-    createInputDiv("menuInputDiv", "menuInputDivPrompt", "What would you like to do?", "menuInputDivInput");
-};
-
-function createAddInputDiv() {
-    createInputDiv("addInputDiv", "addInputDivPrompt", "", "addInputDivInput");
-};
-
-function createSearchInputDiv() {
-    createInputDiv("searchInputDiv", "searchInputDivPrompt", "", "searchInputDivInput");
+function createResultsTableDiv() {
+    var resultsTableDiv = $("<div>");
+    resultsTableDiv.attr("id", "resultsTableDiv");
+    var resultsTable = $("<table>");
+    resultsTable.attr("id", "resultsTable");
+    var resultsTableHeaderRow = $("<tr>");
+    resultsTableHeaderRow.attr("id", "resultsTableHeaderRow");
+    for (var i = 0; i < itemParameters.length; i++) {
+        console.log(itemParameters[i]);
+        var resultsTableHeader = $("<th>");
+        resultsTableHeader.html(itemParameters[i]);
+        resultsTableHeaderRow.append(resultsTableHeader);
+    }
+    resultsTable.append(resultsTableHeaderRow);
+    resultsTableDiv.append(resultsTable);
+    resultsTableDiv.insertBefore("div#commandMenuDiv");
+    $("div#resultsTableDiv").hide();
 };
 
 function createInputDivs() {
-    createMenuInputDiv();
-    createAddInputDiv();
-    createSearchInputDiv();
+    createInputDiv("menuInputDiv", "menuInputDivPrompt", "What would you like to do?", "menuInputDivInput");
+    createInputDiv("addInputDiv", "addInputDivPrompt", "", "addInputDivInput");
+    createInputDiv("searchInputDiv", "searchInputDivPrompt", "", "searchInputDivInput");
+    createInputDiv("editQuantityDiv", "editQuantityDivPrompt", "", "editQuantityDivInput");
 };
 
 function programStart() {
     createInputDivs();
     runMenu();
+    createResultsTableDiv();
 };
 
 function runGetInformation() {
     $("div#menuInputDiv").hide();
     $("div#addInputDiv").show();
     $("div#searchInputDiv").hide();
+    $("div#editQuantityDiv").hide();
     getInformation();
 };
 
@@ -101,16 +127,16 @@ function runMenu() {
     $("div#menuInputDiv").show();
     $("div#addInputDiv").hide();
     $("div#searchInputDiv").hide();
+    $("div#editQuantityDiv").hide();
 };
 
 function runSearchInventory() {
     $("div#menuInputDiv").hide();
     $("div#addInputDiv").hide();
     $("div#searchInputDiv").show();
+    $("div#editQuantityDiv").hide();
     searchInventory();
-}
-
-programStart();
+};
 
 $(document).on("keydown", function (event) {
     if (event.originalEvent.key === "Enter") {
@@ -119,21 +145,23 @@ $(document).on("keydown", function (event) {
         } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() !== "undo") && ($("input#addInputDivInput").val() !== "quit")) {
             getInformation();
         } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() === "quit")) {
-            counter = undefined;
-            itemPropertyInput = [];
-            searchInputArray = [];
+            resetValues();
             runMenu();
         } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() === "undo")) {
-            undo();
+            undo("input#addInputDivInput", itemPropertyInput, "p#addInputDivPrompt", itemParameters);
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "search")) {
             runSearchInventory();
         } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() !== "undo") && ($("input#searchInputDivInput").val() !== "quit")) {
+            $("div#resultsTableDiv").hide();
+            $("p#searchResultsString").hide();
             searchInventory();
         } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() === "quit")) {
-            counter = undefined;
-            itemPropertyInput = [];
-            searchInputArray = [];
+            resetValues();
             runMenu();
+        } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() === "undo")) {
+            undo("input#searchInputDivInput", searchInputArray, "p#searchInputDivPrompt", itemSearchPrompts);
+        } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) {
+            editQuantity();
         }
     }
 });
@@ -147,9 +175,12 @@ function counterLogic() {
 };
 
 function resetValues() {
+    $("input.activeTextInput").val("");
     counter = undefined;
+    add = undefined;
     itemPropertyInput = [];
     searchInputArray = [];
+    searchResults = [];
 };
 
 function searchInventory() {
@@ -157,11 +188,7 @@ function searchInventory() {
     var searchResults = [];
     console.log("The searchInventory function was called!");
     console.log(itemSearchPrompts.length);
-    if (counter === undefined) {
-        counter = 0;
-    } else if (counter !== undefined) {
-        counter++;
-    }
+    counterLogic();
     console.log(counter);
     $("p#searchInputDivPrompt").html(itemSearchPrompts[counter]);
     searchInputArray.push($("input#searchInputDivInput").val());
@@ -186,29 +213,37 @@ function searchInventory() {
             }
         }
         if (searchResults.length > 0) {
+            clearResultsTable();
+            $("div#resultsTableDiv").show();
             console.log(searchResults.length + " results found.");
             console.log(searchResults);
-            searchResults = [];
+            numberOfResults(searchResults.length);
+            displaySearchResults(searchResults);
             resetValues();
         } else if (searchResults.length === 0) {
-            console.log("No results found.");            
+            console.log("No results found.");    
+            numberOfResults(0);        
             resetValues();
         }
     }
 };
 
+function numberOfResults(number) {
+    var searchResultsString = $("<p>");
+    searchResultsString.attr("id", "searchResultsString");
+    searchResultsString.html(number + " results found.");
+    searchResultsString.insertAfter("input#searchInputDivInput");
+    searchResultsString.show();
+};
+
 function getInformation() {
     console.log("getInformation was called!");
     console.log(itemParameters.length);
-    if (counter === undefined) {
-        counter = 0;
-    } else if (counter !== undefined) {
-        counter++;
-    }
+    counterLogic();
     console.log(counter);
     $("p#addInputDivPrompt").html(itemParameters[counter] + ": ");
     itemPropertyInput.push($("input#addInputDivInput").val());
-    $("input.activeTextInput").val("");
+    $("input#addInputDivInput").val("");
     console.log(itemPropertyInput);
     console.log(itemPropertyInput[counter]);
     if (counter === itemParameters.length) {
@@ -216,15 +251,36 @@ function getInformation() {
     }
 };
 
-function undo() {
+function undo(inputID, inputArray, promptID, promptArray) {
     console.log("undo was called");
-    $("input#addInputDivInput").val("");
-    itemPropertyInput.pop();
-    // itemPropertyInput.pop();
-    console.log(itemPropertyInput);
-    counter = (counter - 1);
+    $(inputID).val("");
+    inputArray.pop();
+    console.log(inputArray);
+    if ((counter - 1) >= 0) {
+        counter = (counter - 1);
+    } else if ((counter - 1) < 0) {
+        counter = 0;
+    }
     console.log(counter);
-    $("p#addInputDivPrompt").html(itemParameters[counter]);
+    $(promptID).html(promptArray[counter]);
+};
+
+function displaySearchResults(array) {
+    $("div#resultsTableDiv").show();
+    for (var i = 0; i < array.length; i++) {
+        var tableRow = $("<tr>");
+        for (var j = 0; j < itemParameters.length; j++) {
+            console.log(itemParameters[j] + ": " + array[i][itemParameters[j]]);
+            var tableData = $("<td>");
+            tableData.html(array[i][itemParameters[j]]);
+            tableRow.append(tableData);
+        }
+        $("table#resultsTable").append(tableRow);
+    }
+};
+
+function clearResultsTable() {
+    $("table#resultsTable").find("tr:gt(0)").remove();
 };
 
 function addToInventory() {
@@ -235,12 +291,42 @@ function addToInventory() {
     for (var i = 0; i < itemParameters.length; i++) {
         book[itemParameters[i]] = itemPropertyInput[i];
     }
+    book.ID = inventory.length + 1;
     inventory.push(book);
     console.log(inventory);
-    // writeToInventory(book);
-    // showInventory();
-    // Reset variables
-    counter = undefined;
-    itemPropertyInput = [];
+    resetValues();
     getInformation();
+};
+
+function editQuantity() {
+    $("div#editQuantityDiv").show();
+    console.log("editQuantity was called!");
+    counterLogic();
+    console.log(counter);
+    $("p#editQuantityDivPrompt").html(editQuantityPromptArray[counter]);
+    if (counter === 1) {
+        for (var i = 0; i < inventory.length; i++) {
+            if (inventory[i].ID === $("input#editQuantityDivInput").val()) {
+                searchResults.push(inventory[i]);
+            }
+        }
+        displaySearchResults(searchResults);
+    } else if ((counter === 2) && ($("input#editQuantityDivInput").val() === "add")) {
+        if (($("input#editQuantityDivInput").val() !== "add") && ($("input#editQuantityDivInput").val() !== "deduct")) {
+            counter--;
+            $("p#editQuantityDivPrompt").html("Please enter 'add' or 'subtract");
+        } else if ($("input#editQuantityDivInput").val() === "add") {
+            add = true;
+        } else if ($("input#editQuantityDivInput").val() === "deduct") {
+            add = false;
+        }
+    } else if (counter === 3) {
+        for (var i = 0; i < inventory.length; i++) {
+            if (inventory[i].ID === $("input#editQuantityDivInput").val()) {
+                inventory[i].Quantity = $("input#editQuantityDivInput").val();
+            }
+        }
+        resetValues();
+    }
+    $("input#editQuantityDivInput").val();
 };
