@@ -9,7 +9,7 @@ var inventory = [{
         SubSubject: "Classics",
         Location: "Closet Bookshelf",
         Quantity: 1,
-        ID: 1 
+        ID: 1
     },
     {
         Title: "Desperation",
@@ -59,7 +59,7 @@ var add;
 
 var searchInputArray = [];
 
-var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Quantity"];
+var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Quantity", "ID"];
 
 var itemPropertyInput = [];
 
@@ -138,6 +138,14 @@ function runSearchInventory() {
     searchInventory();
 };
 
+function runEditQuantity() {
+    $("div#menuInputDiv").hide();
+    $("div#addInputDiv").hide();
+    $("div#searchInputDiv").hide();
+    $("div#editQuantityDiv").show();
+    editQuantity();
+}
+
 $(document).on("keydown", function (event) {
     if (event.originalEvent.key === "Enter") {
         if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "add")) {
@@ -161,7 +169,12 @@ $(document).on("keydown", function (event) {
         } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() === "undo")) {
             undo("input#searchInputDivInput", searchInputArray, "p#searchInputDivPrompt", itemSearchPrompts);
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) {
+            runEditQuantity();
+        } else if ($("div#editQuantityDiv").is(":visible")&& ($("input#editQuantityDivInput").val() !== "quit")) {
             editQuantity();
+        } else if ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() === "quit")) {
+            resetValues();
+            runMenu();
         }
     }
 });
@@ -181,6 +194,7 @@ function resetValues() {
     itemPropertyInput = [];
     searchInputArray = [];
     searchResults = [];
+    idContainerArray = [];
 };
 
 function searchInventory() {
@@ -205,7 +219,7 @@ function searchInventory() {
             if (searchInputArray[2] !== "no") {
                 if ((inventory[i][searchInputArray[0]] === searchInputArray[1]) && (inventory[i][searchInputArray[2]] === searchInputArray[3])) {
                     searchResults.push(inventory[i]);
-                } 
+                }
             } else if (searchInputArray[2] === "no") {
                 if (inventory[i][searchInputArray[0]] === searchInputArray[1]) {
                     searchResults.push(inventory[i]);
@@ -221,8 +235,8 @@ function searchInventory() {
             displaySearchResults(searchResults);
             resetValues();
         } else if (searchResults.length === 0) {
-            console.log("No results found.");    
-            numberOfResults(0);        
+            console.log("No results found.");
+            numberOfResults(0);
             resetValues();
         }
     }
@@ -280,6 +294,8 @@ function displaySearchResults(array) {
 };
 
 function clearResultsTable() {
+    // Credit to user 'strelok' https://stackoverflow.com/users/2788/strelok
+    // Link: https://stackoverflow.com/a/370031
     $("table#resultsTable").find("tr:gt(0)").remove();
 };
 
@@ -298,20 +314,26 @@ function addToInventory() {
     getInformation();
 };
 
+var idContainerArray = [];
+
 function editQuantity() {
+    $("input#editQuantityDivInput").prop('disabled', false);
     $("div#editQuantityDiv").show();
     console.log("editQuantity was called!");
     counterLogic();
-    console.log(counter);
+    console.log("counter: " + counter);
     $("p#editQuantityDivPrompt").html(editQuantityPromptArray[counter]);
-    if (counter === 1) {
+    if (counter === 0) {
+        $("div#resultsTableDiv").hide();
+    } else if (counter === 1) {
         for (var i = 0; i < inventory.length; i++) {
-            if (inventory[i].ID === $("input#editQuantityDivInput").val()) {
-                searchResults.push(inventory[i]);
+            if (inventory[i].ID === parseInt($("input#editQuantityDivInput").val())) {
+                idContainerArray.push(inventory[i]);
+                console.log(idContainerArray);
             }
         }
-        displaySearchResults(searchResults);
-    } else if ((counter === 2) && ($("input#editQuantityDivInput").val() === "add")) {
+        displaySearchResults(idContainerArray);
+    } else if (counter === 2) {
         if (($("input#editQuantityDivInput").val() !== "add") && ($("input#editQuantityDivInput").val() !== "deduct")) {
             counter--;
             $("p#editQuantityDivPrompt").html("Please enter 'add' or 'subtract");
@@ -321,12 +343,29 @@ function editQuantity() {
             add = false;
         }
     } else if (counter === 3) {
+        // var searchResults = [];
         for (var i = 0; i < inventory.length; i++) {
-            if (inventory[i].ID === $("input#editQuantityDivInput").val()) {
-                inventory[i].Quantity = $("input#editQuantityDivInput").val();
+            if (inventory[i].ID === parseInt(idContainerArray[0].ID)) {
+                if (add === false && (inventory[i].Quantity - parseInt($("input#editQuantityDivInput").val()) < 0)) {
+                    console.log("Please enter a different value");
+                    $("p#editQuantityDivPrompt").html("Please enter a different value");
+                } else {
+                    if (add === true) {
+                        inventory[i].Quantity = inventory[i].Quantity + parseInt($("input#editQuantityDivInput").val());
+                    } else if (add === false) {
+                        inventory[i].Quantity = inventory[i].Quantity - parseInt($("input#editQuantityDivInput").val());
+                    }
+                    idContainerArray.pop();
+                    console.log(idContainerArray);
+                    idContainerArray.push(inventory[i]);
+                    clearResultsTable();
+                    displaySearchResults(idContainerArray);
+                    $("p#editQuantityDivPrompt").html("Hit 'Enter' to search again.");
+                    $("input#editQuantityDivInput").prop('disabled', true);
+                }
             }
         }
         resetValues();
     }
-    $("input#editQuantityDivInput").val();
+    $("input#editQuantityDivInput").val("");
 };
