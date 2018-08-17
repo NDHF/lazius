@@ -260,7 +260,7 @@ function getInformation() {
     $("input#addInputDivInput").val("");
     console.log(itemPropertyInput);
     console.log(itemPropertyInput[counter]);
-    if (counter === itemParameters.length) {
+    if (counter === itemParameters.length - 1) {
         addToInventory();
     }
 };
@@ -307,7 +307,7 @@ function addToInventory() {
     for (var i = 0; i < itemParameters.length; i++) {
         book[itemParameters[i]] = itemPropertyInput[i];
     }
-    book.ID = inventory.length + 1;
+    book.ID = parseInt(inventory.length + 1);
     inventory.push(book);
     console.log(inventory);
     resetValues();
@@ -317,6 +317,8 @@ function addToInventory() {
 var idContainerArray = [];
 
 function editQuantity() {
+    $("div#resultsTableDiv").hide();
+    clearResultsTable();
     $("input#editQuantityDivInput").prop('disabled', false);
     $("div#editQuantityDiv").show();
     console.log("editQuantity was called!");
@@ -324,7 +326,7 @@ function editQuantity() {
     console.log("counter: " + counter);
     $("p#editQuantityDivPrompt").html(editQuantityPromptArray[counter]);
     if (counter === 0) {
-        $("div#resultsTableDiv").hide();
+        // $("div#resultsTableDiv").hide();
     } else if (counter === 1) {
         for (var i = 0; i < inventory.length; i++) {
             if (inventory[i].ID === parseInt($("input#editQuantityDivInput").val())) {
@@ -351,14 +353,14 @@ function editQuantity() {
                     $("p#editQuantityDivPrompt").html("Please enter a different value");
                 } else {
                     if (add === true) {
-                        inventory[i].Quantity = inventory[i].Quantity + parseInt($("input#editQuantityDivInput").val());
+                        inventory[i].Quantity = parseInt(parseInt(inventory[i].Quantity) + parseInt($("input#editQuantityDivInput").val()));
                     } else if (add === false) {
-                        inventory[i].Quantity = inventory[i].Quantity - parseInt($("input#editQuantityDivInput").val());
+                        inventory[i].Quantity = parseInt(parseInt(inventory[i].Quantity) - parseInt($("input#editQuantityDivInput").val()));
                     }
                     idContainerArray.pop();
                     console.log(idContainerArray);
                     idContainerArray.push(inventory[i]);
-                    clearResultsTable();
+                    // clearResultsTable();
                     displaySearchResults(idContainerArray);
                     $("p#editQuantityDivPrompt").html("Hit 'Enter' to search again.");
                     $("input#editQuantityDivInput").prop('disabled', true);
