@@ -203,9 +203,15 @@ function searchInventory() {
     console.log("The searchInventory function was called!");
     console.log(itemSearchPrompts.length);
     counterLogic();
-    console.log(counter);
+    console.log("Counter: " + counter);
     $("p#searchInputDivPrompt").html(itemSearchPrompts[counter]);
-    searchInputArray.push($("input#searchInputDivInput").val());
+    if (searchInputArray[counter - 1] === "ID") {
+        console.log("It's an ID");
+        searchInputArray.push(parseInt($("input#searchInputDivInput").val()));
+    } else {
+        console.log("It's not an ID");
+        searchInputArray.push($("input#searchInputDivInput").val());
+    }
     $("input#searchInputDivInput").val("");
     console.log(searchInputArray);
     console.log(searchInputArray[counter]);
