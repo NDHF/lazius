@@ -15,7 +15,7 @@ var inventory = [{
         Title: "Desperation",
         Author: "King, Stephen",
         Subject: "Fiction",
-        SubSubject: "Classics",
+        SubSubject: "Horror Fiction",
         Location: "Main Bookshelf",
         Quantity: 1,
         ID: 2
@@ -111,70 +111,47 @@ function createInputDivs() {
 
 function programStart() {
     createInputDivs();
-    runMenu();
+    runAFunction("div#menuInputDiv");
     createResultsTableDiv();
 };
 
-function runGetInformation() {
-    $("div#menuInputDiv").hide();
-    $("div#addInputDiv").show();
-    $("div#searchInputDiv").hide();
-    $("div#editQuantityDiv").hide();
-    getInformation();
+function runAFunction(divToShow, functionToRun) {
+    $("div.inputDiv").hide();
+    $(divToShow).show();
+    if (functionToRun !== undefined) {
+        functionToRun();
+    }
 };
-
-function runMenu() {
-    $("div#menuInputDiv").show();
-    $("div#addInputDiv").hide();
-    $("div#searchInputDiv").hide();
-    $("div#editQuantityDiv").hide();
-};
-
-function runSearchInventory() {
-    $("div#menuInputDiv").hide();
-    $("div#addInputDiv").hide();
-    $("div#searchInputDiv").show();
-    $("div#editQuantityDiv").hide();
-    searchInventory();
-};
-
-function runEditQuantity() {
-    $("div#menuInputDiv").hide();
-    $("div#addInputDiv").hide();
-    $("div#searchInputDiv").hide();
-    $("div#editQuantityDiv").show();
-    editQuantity();
-}
 
 $(document).on("keydown", function (event) {
     if (event.originalEvent.key === "Enter") {
         if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "add")) {
-            runGetInformation();
+            runAFunction("div#addInputDiv", getInformation);
         } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() !== "undo") && ($("input#addInputDivInput").val() !== "quit")) {
             getInformation();
         } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() === "quit")) {
             resetValues();
-            runMenu();
+            runAFunction("div#menuInputDiv");
         } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() === "undo")) {
             undo("input#addInputDivInput", itemPropertyInput, "p#addInputDivPrompt", itemParameters);
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "search")) {
-            runSearchInventory();
+            runAFunction("div#searchInputDiv", searchInventory);
         } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() !== "undo") && ($("input#searchInputDivInput").val() !== "quit")) {
             $("div#resultsTableDiv").hide();
             $("p#searchResultsString").hide();
             searchInventory();
         } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() === "quit")) {
             resetValues();
-            runMenu();
+            runAFunction("div#menuInputDiv");
         } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() === "undo")) {
             undo("input#searchInputDivInput", searchInputArray, "p#searchInputDivPrompt", itemSearchPrompts);
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) {
-            runEditQuantity();
-        } else if ($("div#editQuantityDiv").is(":visible")&& ($("input#editQuantityDivInput").val() !== "quit")) {
+            runAFunction("div#editQuantityDiv", editQuantity);
+        } else if ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() !== "quit")) {
             editQuantity();
         } else if ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() === "quit")) {
             resetValues();
-            runMenu();
+            runAFunction("div#menuInputDiv");
         }
     }
 });
@@ -194,7 +171,7 @@ function resetValues() {
     itemPropertyInput = [];
     searchInputArray = [];
     searchResults = [];
-    idContainerArray = [];
+    indexToBeEdited = [];
 };
 
 function searchInventory() {
@@ -320,9 +297,14 @@ function addToInventory() {
     getInformation();
 };
 
-var idContainerArray = [];
+var indexToBeEdited;
 
 function editQuantity() {
+    var editQuantityInputValue = $("input#editQuantityDivInput").val();
+    var editQuantityMessages = {
+        pleaseAddOrDeduct: "Please enter 'add' or 'deduct",
+        enterDifferentValue: "Please enter a different value"
+    };
     $("div#resultsTableDiv").hide();
     clearResultsTable();
     $("input#editQuantityDivInput").prop('disabled', false);
@@ -335,45 +317,45 @@ function editQuantity() {
         // $("div#resultsTableDiv").hide();
     } else if (counter === 1) {
         for (var i = 0; i < inventory.length; i++) {
-            if (inventory[i].ID === parseInt($("input#editQuantityDivInput").val())) {
-                idContainerArray.push(inventory[i]);
-                console.log(idContainerArray);
+            if (inventory[i].ID === parseInt(editQuantityInputValue)) {
+                indexToBeEdited = i;
+                console.log(indexToBeEdited);
             }
         }
-        displaySearchResults(idContainerArray);
+        displaySearchResults([inventory[indexToBeEdited]]);
     } else if (counter === 2) {
-        if (($("input#editQuantityDivInput").val() !== "add") && ($("input#editQuantityDivInput").val() !== "deduct")) {
+        if ((editQuantityInputValue !== "add") && (editQuantityInputValue !== "deduct")) {
             counter--;
-            $("p#editQuantityDivPrompt").html("Please enter 'add' or 'subtract");
-        } else if ($("input#editQuantityDivInput").val() === "add") {
+            $("p#editQuantityDivPrompt").html(editQuantityMessages.pleaseAddOrDeduct);
+        } else if (editQuantityInputValue === "add") {
             add = true;
-        } else if ($("input#editQuantityDivInput").val() === "deduct") {
+        } else if (editQuantityInputValue === "deduct") {
             add = false;
         }
+        displaySearchResults([inventory[indexToBeEdited]]);
     } else if (counter === 3) {
-        // var searchResults = [];
-        for (var i = 0; i < inventory.length; i++) {
-            if (inventory[i].ID === parseInt(idContainerArray[0].ID)) {
-                if (add === false && (inventory[i].Quantity - parseInt($("input#editQuantityDivInput").val()) < 0)) {
-                    console.log("Please enter a different value");
-                    $("p#editQuantityDivPrompt").html("Please enter a different value");
-                } else {
-                    if (add === true) {
-                        inventory[i].Quantity = parseInt(parseInt(inventory[i].Quantity) + parseInt($("input#editQuantityDivInput").val()));
-                    } else if (add === false) {
-                        inventory[i].Quantity = parseInt(parseInt(inventory[i].Quantity) - parseInt($("input#editQuantityDivInput").val()));
-                    }
-                    idContainerArray.pop();
-                    console.log(idContainerArray);
-                    idContainerArray.push(inventory[i]);
-                    // clearResultsTable();
-                    displaySearchResults(idContainerArray);
-                    $("p#editQuantityDivPrompt").html("Hit 'Enter' to search again.");
-                    $("input#editQuantityDivInput").prop('disabled', true);
-                }
+            var inputIsNotANumber = (isNaN(parseInt(editQuantityInputValue)));
+            var inputIsNegative = (parseInt(editQuantityInputValue) < 0);
+            var itWouldDeductAnImpossibleAmount = (add === false 
+                && (inventory[indexToBeEdited].Quantity - parseInt(editQuantityInputValue) < 0));
+        if (inputIsNotANumber || inputIsNegative || itWouldDeductAnImpossibleAmount) {
+            counter--;
+            console.log(counter);
+            console.log(editQuantityMessages.enterDifferentValue);
+            $("p#editQuantityDivPrompt").html(editQuantityMessages.enterDifferentValue);
+            displaySearchResults([inventory[indexToBeEdited]]);
+        } else {
+            if (add === true) {
+                inventory[indexToBeEdited].Quantity = parseInt(parseInt(inventory[indexToBeEdited].Quantity) + parseInt(editQuantityInputValue));
+            } else if (add === false) {
+                inventory[indexToBeEdited].Quantity = parseInt(parseInt(inventory[indexToBeEdited].Quantity) - parseInt(editQuantityInputValue));
             }
+            console.log(indexToBeEdited);
+            displaySearchResults([inventory[indexToBeEdited]]);
+            $("p#editQuantityDivPrompt").html("Hit 'Enter' to search again.");
+            $("input#editQuantityDivInput").prop('disabled', true);
+            resetValues();
         }
-        resetValues();
     }
     $("input#editQuantityDivInput").val("");
 };
