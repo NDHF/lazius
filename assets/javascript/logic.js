@@ -123,37 +123,30 @@ function runAFunction(divToShow, functionToRun) {
     }
 };
 
+function quitToMenuLogic() {
+    if ($("div.inputDiv:visible input").val() === "quit") {
+        resetValues();
+        runAFunction("div#menuInputDiv");
+    }
+};
+
 $(document).on("keydown", function (event) {
     if (event.originalEvent.key === "Enter") {
-        if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "add")) {
+        quitToMenuLogic();
+        if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "add")) || ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() !== "undo") && ($("input#addInputDivInput").val() !== "quit"))) {
             runAFunction("div#addInputDiv", getInformation);
-        } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() !== "undo") && ($("input#addInputDivInput").val() !== "quit")) {
-            getInformation();
-        } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() === "quit")) {
-            resetValues();
-            runAFunction("div#menuInputDiv");
-        } else if ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() === "undo")) {
-            undo("input#addInputDivInput", itemPropertyInput, "p#addInputDivPrompt", itemParameters);
-        } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "search")) {
-            runAFunction("div#searchInputDiv", searchInventory);
-        } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() !== "undo") && ($("input#searchInputDivInput").val() !== "quit")) {
-            $("div#resultsTableDiv").hide();
-            $("p#searchResultsString").hide();
-            searchInventory();
-        } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() === "quit")) {
-            resetValues();
-            runAFunction("div#menuInputDiv");
-        } else if ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() === "undo")) {
-            undo("input#searchInputDivInput", searchInputArray, "p#searchInputDivPrompt", itemSearchPrompts);
-        } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) {
-            runAFunction("div#editQuantityDiv", editQuantity);
-        } else if ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() !== "quit")) {
-            editQuantity();
-        } else if ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() === "quit")) {
-            resetValues();
-            runAFunction("div#menuInputDiv");
+        } else if ($("div.inputDiv:visible input").val() === "undo") {
+            if ($("div#addInputDiv").is(":visible")) {
+                undo("input#addInputDivInput", itemPropertyInput, "p#addInputDivPrompt", itemParameters);
+            } else if ($("div#searchInputDiv").is(":visible")) {
+                undo("input#searchInputDivInput", searchInputArray, "p#searchInputDivPrompt", itemSearchPrompts);
+            }
+        } else if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "search")) || ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() !== "undo") && ($("input#searchInputDivInput").val() !== "quit"))) {
+                runAFunction("div#searchInputDiv", searchInventory);
+            } else if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) || ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() !== "quit"))) {
+                runAFunction("div#editQuantityDiv", editQuantity);
+            }
         }
-    }
 });
 
 function counterLogic() {
@@ -175,6 +168,8 @@ function resetValues() {
 };
 
 function searchInventory() {
+    $("div#resultsTableDiv").hide();
+    $("p#searchResultsString").hide();
     $("input#searchInputDivInput").prop('disabled', false);
     var searchResults = [];
     console.log("The searchInventory function was called!");
@@ -334,10 +329,10 @@ function editQuantity() {
         }
         displaySearchResults([inventory[indexToBeEdited]]);
     } else if (counter === 3) {
-            var inputIsNotANumber = (isNaN(parseInt(editQuantityInputValue)));
-            var inputIsNegative = (parseInt(editQuantityInputValue) < 0);
-            var itWouldDeductAnImpossibleAmount = (add === false 
-                && (inventory[indexToBeEdited].Quantity - parseInt(editQuantityInputValue) < 0));
+        var inputIsNotANumber = (isNaN(parseInt(editQuantityInputValue)));
+        var inputIsNegative = (parseInt(editQuantityInputValue) < 0);
+        var itWouldDeductAnImpossibleAmount = (add === false &&
+            (inventory[indexToBeEdited].Quantity - parseInt(editQuantityInputValue) < 0));
         if (inputIsNotANumber || inputIsNegative || itWouldDeductAnImpossibleAmount) {
             counter--;
             console.log(counter);
