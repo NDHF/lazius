@@ -52,7 +52,8 @@ var itemSearchPrompts = [
 var editQuantityPromptArray = [
     "Enter item ID:",
     "Would you like to add or deduct?",
-    "By how many?"
+    "By how many?",
+    "Entrant's Initials",
 ];
 
 var add;
@@ -64,7 +65,7 @@ var searchInputArray = [];
 // Date stamp is added automatically using a date method.
 // ID is added automatically using a rudimentary auto-increment. 
 
-var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Quantity", "Entrant's Initials", "Date Stamp", "ID"];
+var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Quantity", "Initials", "ID"];
 
 var itemPropertyInput = [];
 
@@ -186,7 +187,7 @@ function counterLogic() {
 };
 
 function resetValues() {
-    $("input#addInputDivInput").removeAttr("maxlength");
+    $("input.activeTextInput").removeAttr("maxlength");
     $("input.activeTextInput").val("");
     $("div#parametersDiv").hide();
     counter = undefined;
@@ -259,8 +260,6 @@ function numberOfResults(number) {
     searchResultsString.show();
 };
 
-var getInformationErrorMesages = {initialsMustBeThreeLetters: "Initals must be three letters."};
-
 function getInformation() {
     console.log("getInformation was called!");
     console.log(itemParameters.length);
@@ -271,10 +270,10 @@ function getInformation() {
     $("input#addInputDivInput").val("");
     console.log(itemPropertyInput);
     console.log(itemPropertyInput[counter]);
-    if (itemParameters[counter] === "Entrant's Initials") {
+    if (itemParameters[counter] === "Initials") {
         $("input#addInputDivInput").attr("maxlength", "3");
     }
-    if (counter === itemParameters.length - 2) {
+    if (counter === itemParameters.length - 1) {
         addToInventory();
     }
 };
@@ -321,9 +320,17 @@ function addToInventory() {
     for (var i = 0; i < itemParameters.length; i++) {
         book[itemParameters[i]] = itemPropertyInput[i];
     }
+    book.Quantity = parseInt(book.Quantity);
     var d = new Date;
     book.DateStamp = d;
     book.ID = parseInt(inventory.length + 1);
+    book.QuantityChanges = [];
+    book.QuantityChanges[0] = {
+        NewQuantity: book.Quantity,
+        QuantityChange: 0,
+        Initials: book.Initials,
+        DateStamp: book.DateStamp
+    }
     inventory.push(book);
     console.log(inventory);
     resetValues();
@@ -336,7 +343,8 @@ function editQuantity() {
     var editQuantityInputValue = $("input#editQuantityDivInput").val();
     var editQuantityMessages = {
         pleaseAddOrDeduct: "Please enter 'add' or 'deduct",
-        enterDifferentValue: "Please enter a different value"
+        enterDifferentValue: "Please enter a different value",
+        hitEnterToSearchAgain: "Hit 'Enter' to search again."
     };
     $("div#resultsTableDiv").hide();
     clearResultsTable();
@@ -367,6 +375,7 @@ function editQuantity() {
         }
         displaySearchResults([inventory[indexToBeEdited]]);
     } else if (counter === 3) {
+        $("input#editQuantityDivInput").attr("maxlength", "3");
         var inputIsNotANumber = (isNaN(parseInt(editQuantityInputValue)));
         var inputIsNegative = (parseInt(editQuantityInputValue) < 0);
         var itWouldDeductAnImpossibleAmount = (add === false &&
@@ -383,12 +392,20 @@ function editQuantity() {
             } else if (add === false) {
                 inventory[indexToBeEdited].Quantity = parseInt(parseInt(inventory[indexToBeEdited].Quantity) - parseInt(editQuantityInputValue));
             }
-            console.log(indexToBeEdited);
-            displaySearchResults([inventory[indexToBeEdited]]);
-            $("p#editQuantityDivPrompt").html("Hit 'Enter' to search again.");
-            $("input#editQuantityDivInput").prop('disabled', true);
-            resetValues();
         }
+    } else if (counter === 4) {
+        var quantityUpdate = {};
+        var d = new Date;
+        quantityUpdate.NewQuantity = inventory[indexToBeEdited].Quantity;
+        quantityUpdate.QuantityChange = quantityUpdate.NewQuantity - (inventory[indexToBeEdited].QuantityChanges[inventory[indexToBeEdited].QuantityChanges.length - 1].NewQuantity);
+        quantityUpdate.Initials = editQuantityInputValue;
+        quantityUpdate.DateStamp = d;
+        inventory[indexToBeEdited].QuantityChanges.push(quantityUpdate);
+        console.log(indexToBeEdited);
+        displaySearchResults([inventory[indexToBeEdited]]);
+        $("p#editQuantityDivPrompt").html(editQuantityMessages.hitEnterToSearchAgain);
+        $("input#editQuantityDivInput").prop('disabled', true);
+        resetValues();
     }
     $("input#editQuantityDivInput").val("");
 };
