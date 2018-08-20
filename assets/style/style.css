@@ -65,3 +65,11 @@ td.menuData {
 .alignRight {
     text-align: right;
 }
+
+ul {
+    text-align: center;
+}
+
+li {
+    display: inline-block;
+}

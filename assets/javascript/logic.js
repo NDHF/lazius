@@ -59,7 +59,12 @@ var add;
 
 var searchInputArray = [];
 
-var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Quantity", "ID"];
+// Any parameters may be used here.
+// The logic for adding items requires that the last user input be a three-letter inital.
+// Date stamp is added automatically using a date method.
+// ID is added automatically using a rudimentary auto-increment. 
+
+var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Quantity", "Entrant's Initials", "Date Stamp", "ID"];
 
 var itemPropertyInput = [];
 
@@ -82,6 +87,22 @@ function createInputDiv(divID, inputPromptID, inputPromptString, inputID) {
     searchField.append(textInput);
     searchField.insertBefore("div#commandMenuDiv");
 };
+
+function createParametersList() {
+    var parametersDiv = $("<div>");
+    parametersDiv.attr("id", "parametersDiv");
+    var parametersList = $("<ul>");
+    parametersList.append("<p><b>Parameters:</b></p>");
+    parametersList.append("// ");
+    for (var i = 0; i < itemParameters.length; i++) {
+        var parametersListItem = $("<li>");
+        parametersListItem.html(itemParameters[i] + "  //  ");
+        parametersList.append(parametersListItem);
+    }
+    parametersDiv.append(parametersList);
+    parametersDiv.insertBefore("div#commandMenuDiv");
+    $("div#parametersDiv").hide();
+}
 
 function createResultsTableDiv() {
     var resultsTableDiv = $("<div>");
@@ -113,9 +134,13 @@ function programStart() {
     createInputDivs();
     runAFunction("div#menuInputDiv");
     createResultsTableDiv();
+    createParametersList();
 };
 
 function runAFunction(divToShow, functionToRun) {
+    if ($("div#parametersDiv").is(":visible")) {
+        $("div#parametersDiv").hide();
+    }
     $("div.inputDiv").hide();
     $(divToShow).show();
     if (functionToRun !== undefined) {
@@ -142,11 +167,14 @@ $(document).on("keydown", function (event) {
                 undo("input#searchInputDivInput", searchInputArray, "p#searchInputDivPrompt", itemSearchPrompts);
             }
         } else if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "search")) || ($("div#searchInputDiv").is(":visible") && ($("input#searchInputDivInput").val() !== "undo") && ($("input#searchInputDivInput").val() !== "quit"))) {
-                runAFunction("div#searchInputDiv", searchInventory);
-            } else if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) || ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() !== "quit"))) {
-                runAFunction("div#editQuantityDiv", editQuantity);
-            }
+            runAFunction("div#searchInputDiv", searchInventory);
+        } else if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) || ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() !== "quit"))) {
+            runAFunction("div#editQuantityDiv", editQuantity);
+        } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "param")) {
+            $("input.activeTextInput").val("");
+            $("div#parametersDiv").show();
         }
+    }
 });
 
 function counterLogic() {
@@ -158,7 +186,9 @@ function counterLogic() {
 };
 
 function resetValues() {
+    $("input#addInputDivInput").removeAttr("maxlength");
     $("input.activeTextInput").val("");
+    $("div#parametersDiv").hide();
     counter = undefined;
     add = undefined;
     itemPropertyInput = [];
@@ -168,6 +198,7 @@ function resetValues() {
 };
 
 function searchInventory() {
+    $("div#parametersDiv").show();
     $("div#resultsTableDiv").hide();
     $("p#searchResultsString").hide();
     $("input#searchInputDivInput").prop('disabled', false);
@@ -228,6 +259,8 @@ function numberOfResults(number) {
     searchResultsString.show();
 };
 
+var getInformationErrorMesages = {initialsMustBeThreeLetters: "Initals must be three letters."};
+
 function getInformation() {
     console.log("getInformation was called!");
     console.log(itemParameters.length);
@@ -238,7 +271,10 @@ function getInformation() {
     $("input#addInputDivInput").val("");
     console.log(itemPropertyInput);
     console.log(itemPropertyInput[counter]);
-    if (counter === itemParameters.length - 1) {
+    if (itemParameters[counter] === "Entrant's Initials") {
+        $("input#addInputDivInput").attr("maxlength", "3");
+    }
+    if (counter === itemParameters.length - 2) {
         addToInventory();
     }
 };
@@ -285,6 +321,8 @@ function addToInventory() {
     for (var i = 0; i < itemParameters.length; i++) {
         book[itemParameters[i]] = itemPropertyInput[i];
     }
+    var d = new Date;
+    book.DateStamp = d;
     book.ID = parseInt(inventory.length + 1);
     inventory.push(book);
     console.log(inventory);
