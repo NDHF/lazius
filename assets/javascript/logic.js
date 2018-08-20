@@ -147,12 +147,14 @@ function runAFunction(divToShow, functionToRun) {
     if (functionToRun !== undefined) {
         functionToRun();
     }
+    $("div.inputDiv:visible input").select();
 };
 
 function quitToMenuLogic() {
     if ($("div.inputDiv:visible input").val() === "quit") {
         resetValues();
         runAFunction("div#menuInputDiv");
+        $("div.inputDiv:visible input").select();
     }
 };
 
@@ -174,6 +176,7 @@ $(document).on("keydown", function (event) {
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "param")) {
             $("input.activeTextInput").val("");
             $("div#parametersDiv").show();
+            $("div.inputDiv:visible input").select();
         }
     }
 });
