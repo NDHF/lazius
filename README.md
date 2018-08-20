@@ -27,6 +27,7 @@ A simple inventory project
  
 # Future Functionality
 
+* A top priority is cleaning up the core function which is called each time Enter is pressed. The conditions used are too complicated at the moment.
 * The primary goal with this app is to make it connect to a database, likely MySQL.
 * I might add the ability to search using three parameters.
 * I would like to add auto-capitalize, which might save some time on hitting the Shift key.

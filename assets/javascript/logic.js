@@ -113,7 +113,6 @@ function createResultsTableDiv() {
     var resultsTableHeaderRow = $("<tr>");
     resultsTableHeaderRow.attr("id", "resultsTableHeaderRow");
     for (var i = 0; i < itemParameters.length; i++) {
-        console.log(itemParameters[i]);
         var resultsTableHeader = $("<th>");
         resultsTableHeader.html(itemParameters[i]);
         resultsTableHeaderRow.append(resultsTableHeader);
@@ -208,7 +207,6 @@ function searchInventory() {
     $("input#searchInputDivInput").prop('disabled', false);
     var searchResults = [];
     console.log("The searchInventory function was called!");
-    console.log(itemSearchPrompts.length);
     counterLogic();
     console.log("Counter: " + counter);
     $("p#searchInputDivPrompt").html(itemSearchPrompts[counter]);
@@ -220,8 +218,6 @@ function searchInventory() {
         searchInputArray.push($("input#searchInputDivInput").val());
     }
     $("input#searchInputDivInput").val("");
-    console.log(searchInputArray);
-    console.log(searchInputArray[counter]);
     if (counter === itemSearchPrompts.length) {
         $("p#searchInputDivPrompt").html("Hit 'Enter' to search again.");
         $("input#searchInputDivInput").prop('disabled', true);
@@ -265,14 +261,10 @@ function numberOfResults(number) {
 
 function getInformation() {
     console.log("getInformation was called!");
-    console.log(itemParameters.length);
     counterLogic();
-    console.log(counter);
     $("p#addInputDivPrompt").html(itemParameters[counter] + ": ");
     itemPropertyInput.push($("input#addInputDivInput").val());
     $("input#addInputDivInput").val("");
-    console.log(itemPropertyInput);
-    console.log(itemPropertyInput[counter]);
     if (itemParameters[counter] === "Initials") {
         $("input#addInputDivInput").attr("maxlength", "3");
     }
@@ -285,7 +277,6 @@ function undo(inputID, inputArray, promptID, promptArray) {
     console.log("undo was called");
     $(inputID).val("");
     inputArray.pop();
-    console.log(inputArray);
     if ((counter - 1) >= 0) {
         counter = (counter - 1);
     } else if ((counter - 1) < 0) {
@@ -358,12 +349,10 @@ function editQuantity() {
     console.log("counter: " + counter);
     $("p#editQuantityDivPrompt").html(editQuantityPromptArray[counter]);
     if (counter === 0) {
-        // $("div#resultsTableDiv").hide();
     } else if (counter === 1) {
         for (var i = 0; i < inventory.length; i++) {
             if (inventory[i].ID === parseInt(editQuantityInputValue)) {
                 indexToBeEdited = i;
-                console.log(indexToBeEdited);
             }
         }
         displaySearchResults([inventory[indexToBeEdited]]);
@@ -385,8 +374,6 @@ function editQuantity() {
             (inventory[indexToBeEdited].Quantity - parseInt(editQuantityInputValue) < 0));
         if (inputIsNotANumber || inputIsNegative || itWouldDeductAnImpossibleAmount) {
             counter--;
-            console.log(counter);
-            console.log(editQuantityMessages.enterDifferentValue);
             $("p#editQuantityDivPrompt").html(editQuantityMessages.enterDifferentValue);
             displaySearchResults([inventory[indexToBeEdited]]);
         } else {
@@ -404,7 +391,6 @@ function editQuantity() {
         quantityUpdate.Initials = editQuantityInputValue;
         quantityUpdate.DateStamp = d;
         inventory[indexToBeEdited].QuantityChanges.push(quantityUpdate);
-        console.log(indexToBeEdited);
         displaySearchResults([inventory[indexToBeEdited]]);
         $("p#editQuantityDivPrompt").html(editQuantityMessages.hitEnterToSearchAgain);
         $("input#editQuantityDivInput").prop('disabled', true);
