@@ -1,47 +1,6 @@
 // LAZIUS (LOT-ZEE-US), AN INVENTORY PROGRAM
 // Lazius allows a user to manipulate an inventory using a browser interface. 
 
-// // This is a dummy inventory with objects already inside, for use while designing the program. 
-// var inventory = [{
-//         Title: "Moby-Dick",
-//         Author: "Melville, Herman",
-//         Subject: "Fiction",
-//         SubSubject: "Classics",
-//         Location: "Closet Bookshelf",
-//         Quantity: 1,
-//         ID: 1
-//     },
-//     {
-//         Title: "Desperation",
-//         Author: "King, Stephen",
-//         Subject: "Fiction",
-//         SubSubject: "Horror Fiction",
-//         Location: "Main Bookshelf",
-//         Quantity: 1,
-//         ID: 2
-//     },
-//     {
-//         Title: "Tale of Despereaux, The",
-//         Author: "DiCamillo, Kate",
-//         Subject: "Fiction",
-//         SubSubject: "Children's Fiction",
-//         Location: "Main Bookshelf",
-//         Quantity: 2,
-//         ID: 3
-//     },
-//     {
-//         Title: "Zen and the Art of Motorcycle Maintenance",
-//         Author: "Pirsig, Robert M.",
-//         Subject: "Philosophy",
-//         SubSubject: "Metaphysics of Quality",
-//         Location: "Main Bookshelf",
-//         Quantity: 1,
-//         ID: 4
-//     }
-// ];
-
-// var inventory = [];
-
 var itemSearchPrompts = [
     "What parameter would you like to use?",
     "What is the value of that parameter?",
@@ -70,6 +29,10 @@ var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Q
 var itemPropertyInput = [];
 
 var counter;
+
+var inventoryObject;
+
+var indexToBeEdited;
 
 programStart();
 
@@ -112,6 +75,9 @@ function createResultsTableDiv() {
     resultsTable.attr("id", "resultsTable");
     var resultsTableHeaderRow = $("<tr>");
     resultsTableHeaderRow.attr("id", "resultsTableHeaderRow");
+    var resultsTableCaption = $("<caption>");
+    resultsTableCaption.text("Your last entry:");
+    resultsTableCaption.hide();
     for (var i = 0; i < itemParameters.length; i++) {
         var resultsTableHeader = $("<th>");
         resultsTableHeader.html(itemParameters[i]);
@@ -130,6 +96,8 @@ function createInputDivs() {
     createInputDiv("editQuantityDiv", "editQuantityDivPrompt", "", "editQuantityDivInput");
     createInputDiv("uploadInputDiv", "uploadInputDivPrompt", "", "uploadInputDivInput");
     createInputDiv("printInputDiv", "printInputDivPrompt", "", "printInputDivInput");
+    createInputDiv("createNewInventoryDiv", "createNewInventoryPrompt", "", "createNewInventoryInput");
+    createInputDiv("noInventoryErrorCatchDiv", "noInventoryErrorCatchDivPrompt", "", "noInventoryErrorCatchDivInput");
 };
 
 function programStart() {
@@ -163,7 +131,13 @@ function quitToMenuLogic() {
 $(document).on("keydown", function (event) {
     if (event.originalEvent.key === "Enter") {
         quitToMenuLogic();
-        if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "add")) || ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() !== "undo") && ($("input#addInputDivInput").val() !== "quit"))) {
+        if (((inventoryObject === undefined) &&
+                (($("div.inputDiv:visible input").val() === "add") ||
+                    ($("div.inputDiv:visible input").val() === "edit") ||
+                    ($("div.inputDiv:visible input").val() === "print") ||
+                    ($("div.inputDiv:visible input").val() === "search"))) || ($("div#noInventoryErrorCatchDiv").is(":visible"))) {
+            runAFunction("div#noInventoryErrorCatchDiv", noInventoryErrorCatch);
+        } else if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "add")) || ($("div#addInputDiv").is(":visible") && ($("input#addInputDivInput").val() !== "undo") && ($("input#addInputDivInput").val() !== "quit"))) {
             runAFunction("div#addInputDiv", getInformation);
         } else if ($("div.inputDiv:visible input").val() === "undo") {
             if ($("div#addInputDiv").is(":visible")) {
@@ -179,6 +153,8 @@ $(document).on("keydown", function (event) {
             runAFunction("div#printInputDiv", printInventory);
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "upload") || ($("div#uploadInputDiv").is(":visible"))) {
             runAFunction($("div#uploadInputDiv", uploadInventory))
+        } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "newinv") || ($("div#createNewInventoryDiv").is(":visible"))) {
+            runAFunction($("div#createNewInventoryDiv", createNewInventory))
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "param")) {
             $("input.activeTextInput").val("");
             $("div#parametersDiv").show();
@@ -199,6 +175,7 @@ function resetValues() {
     $("input.activeTextInput").removeAttr("maxlength");
     $("input.activeTextInput").val("");
     $("div#parametersDiv").hide();
+    // $("div#resultsTableDiv").hide();
     counter = undefined;
     add = undefined;
     itemPropertyInput = [];
@@ -206,21 +183,6 @@ function resetValues() {
     searchResults = [];
     indexToBeEdited = [];
 };
-
-// function pullFromFirebase() {
-//     console.log("pullFromFirebase was called");
-//     inventory = [];
-//     dataRef.ref().on("value", function(snapshot) {
-//         var firebaseSnapshot = snapshot.val();
-//         for (var i = 0; i < Object.keys(firebaseSnapshot).length; i++) {
-//             inventory.push(firebaseSnapshot[Object.keys(firebaseSnapshot)[i]]);
-//         }
-//         // console.log(inventory);
-//         firebaseSnapshot = {};
-//       }, function (errorObject) {
-//         console.log("The read failed: " + errorObject.code);
-//       });
-// };
 
 function searchInventory() {
     $("div#parametersDiv").show();
@@ -240,22 +202,21 @@ function searchInventory() {
         searchInputArray.push($("input#searchInputDivInput").val());
     }
     $("input#searchInputDivInput").val("");
-    if (counter === 0) {
-    } else if (counter === itemSearchPrompts.length) {
-        console.log(inventory);
+    if (counter === 0 && inventoryObject === undefined) {} else if (counter === itemSearchPrompts.length) {
+        console.log(inventoryObject.inventory);
         $("p#searchInputDivPrompt").html("Hit 'Enter' to search again.");
         $("input#searchInputDivInput").prop('disabled', true);
         if (searchInputArray[0] === "") {
             searchInputArray.shift();
         }
-        for (var i = 0; i < inventory.length; i++) {
+        for (var i = 0; i < inventoryObject.inventory.length; i++) {
             if (searchInputArray[2] !== "no") {
-                if ((inventory[i][searchInputArray[0]] === searchInputArray[1]) && (inventory[i][searchInputArray[2]] === searchInputArray[3])) {
+                if ((inventoryObject.inventory[i][searchInputArray[0]] === searchInputArray[1]) && (inventoryObject.inventory[i][searchInputArray[2]] === searchInputArray[3])) {
                     searchResults.push(inventory[i]);
                 }
             } else if (searchInputArray[2] === "no") {
                 if (inventory[i][searchInputArray[0]] === searchInputArray[1]) {
-                    searchResults.push(inventory[i]);
+                    searchResults.push(inventoryObject.inventory[i]);
                 }
             }
         }
@@ -284,6 +245,9 @@ function numberOfResults(number) {
 };
 
 function getInformation() {
+    clearResultsTable();
+    $("input#addInputDivInput").prop("disabled", false);
+    $("div#resultsTableDiv").hide();
     console.log("getInformation was called!");
     counterLogic();
     $("p#addInputDivPrompt").html(itemParameters[counter] + ": ");
@@ -293,8 +257,10 @@ function getInformation() {
         $("input#addInputDivInput").attr("maxlength", "3");
     }
     if (counter === itemParameters.length - 1) {
+        $("input#addInputDivInput").prop("disabled", true);
+        $("p#addInputDivPrompt").html("Hit 'Enter' to add new item");
         addToInventory();
-    }
+    } 
 };
 
 function undo(inputID, inputArray, promptID, promptArray) {
@@ -312,6 +278,7 @@ function undo(inputID, inputArray, promptID, promptArray) {
 
 function displaySearchResults(array) {
     $("div#resultsTableDiv").show();
+    $("table#resultsTable caption").hide();
     for (var i = 0; i < array.length; i++) {
         var tableRow = $("<tr>");
         for (var j = 0; j < itemParameters.length; j++) {
@@ -341,7 +308,7 @@ function addToInventory() {
     book.Quantity = parseInt(book.Quantity);
     var d = new Date;
     book.DateStamp = d;
-    book.ID = parseInt(inventory.length + 1);
+    book.ID = parseInt(inventoryObject.inventory.length + 1);
     book.QuantityChanges = [];
     book.QuantityChanges[0] = {
         NewQuantity: book.Quantity,
@@ -349,14 +316,12 @@ function addToInventory() {
         Initials: book.Initials,
         DateStamp: book.DateStamp
     }
-    inventory.push(book);
+    inventoryObject.inventory.push(book);
     // dataRef.ref().push(book);
-    console.log(inventory);
+    console.log(inventoryObject.inventory);
+    displaySearchResults([inventoryObject.inventory[inventoryObject.inventory.length - 1]]);
     resetValues();
-    getInformation();
 };
-
-var indexToBeEdited;
 
 function editQuantity() {
     var editQuantityInputValue = $("input#editQuantityDivInput").val();
@@ -374,12 +339,12 @@ function editQuantity() {
     console.log("counter: " + counter);
     $("p#editQuantityDivPrompt").html(editQuantityPromptArray[counter]);
     if (counter === 0) {} else if (counter === 1) {
-        for (var i = 0; i < inventory.length; i++) {
-            if (inventory[i].ID === parseInt(editQuantityInputValue)) {
+        for (var i = 0; i < inventoryObject.inventory.length; i++) {
+            if (inventoryObject.inventory[i].ID === parseInt(editQuantityInputValue)) {
                 indexToBeEdited = i;
             }
         }
-        displaySearchResults([inventory[indexToBeEdited]]);
+        displaySearchResults([inventoryObject.inventory[indexToBeEdited]]);
     } else if (counter === 2) {
         if ((editQuantityInputValue !== "add") && (editQuantityInputValue !== "deduct")) {
             counter--;
@@ -389,33 +354,33 @@ function editQuantity() {
         } else if (editQuantityInputValue === "deduct") {
             add = false;
         }
-        displaySearchResults([inventory[indexToBeEdited]]);
+        displaySearchResults([inventoryObject.inventory[indexToBeEdited]]);
     } else if (counter === 3) {
         $("input#editQuantityDivInput").attr("maxlength", "3");
         var inputIsNotANumber = (isNaN(parseInt(editQuantityInputValue)));
         var inputIsNegative = (parseInt(editQuantityInputValue) < 0);
         var itWouldDeductAnImpossibleAmount = (add === false &&
-            (inventory[indexToBeEdited].Quantity - parseInt(editQuantityInputValue) < 0));
+            (inventoryObject.inventory[indexToBeEdited].Quantity - parseInt(editQuantityInputValue) < 0));
         if (inputIsNotANumber || inputIsNegative || itWouldDeductAnImpossibleAmount) {
             counter--;
             $("p#editQuantityDivPrompt").html(editQuantityMessages.enterDifferentValue);
-            displaySearchResults([inventory[indexToBeEdited]]);
+            displaySearchResults([inventoryObject.inventory[indexToBeEdited]]);
         } else {
             if (add === true) {
-                inventory[indexToBeEdited].Quantity = parseInt(parseInt(inventory[indexToBeEdited].Quantity) + parseInt(editQuantityInputValue));
+                inventoryObject.inventory[indexToBeEdited].Quantity = parseInt(parseInt(inventoryObject.inventory[indexToBeEdited].Quantity) + parseInt(editQuantityInputValue));
             } else if (add === false) {
-                inventory[indexToBeEdited].Quantity = parseInt(parseInt(inventory[indexToBeEdited].Quantity) - parseInt(editQuantityInputValue));
+                inventoryObject.inventory[indexToBeEdited].Quantity = parseInt(parseInt(inventoryObject.inventory[indexToBeEdited].Quantity) - parseInt(editQuantityInputValue));
             }
         }
     } else if (counter === 4) {
         var quantityUpdate = {};
         var d = new Date;
-        quantityUpdate.NewQuantity = inventory[indexToBeEdited].Quantity;
-        quantityUpdate.QuantityChange = quantityUpdate.NewQuantity - (inventory[indexToBeEdited].QuantityChanges[inventory[indexToBeEdited].QuantityChanges.length - 1].NewQuantity);
+        quantityUpdate.NewQuantity = inventoryObject.inventory[indexToBeEdited].Quantity;
+        quantityUpdate.QuantityChange = quantityUpdate.NewQuantity - (inventoryObject.inventory[indexToBeEdited].QuantityChanges[inventoryObject.inventory[indexToBeEdited].QuantityChanges.length - 1].NewQuantity);
         quantityUpdate.Initials = editQuantityInputValue;
         quantityUpdate.DateStamp = d;
-        inventory[indexToBeEdited].QuantityChanges.push(quantityUpdate);
-        displaySearchResults([inventory[indexToBeEdited]]);
+        inventoryObject.inventory[indexToBeEdited].QuantityChanges.push(quantityUpdate);
+        displaySearchResults([inventoryObject.inventory[indexToBeEdited]]);
         $("p#editQuantityDivPrompt").html(editQuantityMessages.hitEnterToSearchAgain);
         $("input#editQuantityDivInput").prop('disabled', true);
         resetValues();
@@ -433,41 +398,87 @@ function createTextAreaDiv() {
     textAreaDiv.append(textArea);
     textAreaDiv.insertAfter("div#commandMenuDiv");
     textAreaDiv.hide();
-}
+};
+
+function createNewInventory() {
+    counterLogic();
+    if (counter === 0) {
+        $("div#createNewInventoryDiv").show();
+        $("p#createNewInventoryPrompt").html("You are creating a new inventory. Type initials and hit 'Enter' to continue.");
+        $("input#createNewInventoryInput").attr("maxlength", "3");
+    } else if (counter === 1) {
+        $("input#createNewInventoryInput").prop("disabled", true);
+        var d = new Date;
+        inventoryObject = {
+            createdBy: $("input#createNewInventoryInput").val(),
+            dateCreated: d,
+            inventory: []
+        }
+        $("input#createNewInventoryInput").val("");
+        $("p#createNewInventoryPrompt").html("Inventory created. Press 'Enter' to continue.");
+    } else if (counter === 2) {
+        resetValues();
+        runAFunction("div#menuInputDiv");
+        $("div.inputDiv:visible input").select();
+    }
+};
 
 function printInventory() {
     counterLogic();
     if (counter === 0) {
         $("div#textAreaDiv").show();
         $("input#printInputDivInput").prop('disabled', true);
-        console.log(inventory);
-        var inventoryObject = {
-            inventory: inventory
-        }
+        console.log(inventoryObject.inventory);
         $("div#textAreaDiv textarea").val(JSON.stringify(inventoryObject));
         $("div#textAreaDiv textarea").select();
         document.execCommand("copy");
         $("div#textAreaDiv").hide();
-        $("p#printInputDivPrompt").html("Your JSON text has been copied. Please save it to a file. Press 'Enter' to return to menu.");
+        $("p#printInputDivPrompt").html("Your JSON text has been copied. Please save it to a file. <br> Press 'Enter' to return to menu.");
     } else if (counter === 1) {
         resetValues();
         runAFunction("div#menuInputDiv");
         $("div.inputDiv:visible input").select();
     }
 };
-function uploadInventory() {
+
+function noInventoryErrorCatch() {
     counterLogic();
     if (counter === 0) {
-        $("div#textAreaDiv").show();
-        $("input#uploadInputDivInput").prop('disabled', true);
-        $("p#uploadInputDivPrompt").html("Please paste in your JSON text. Press 'Enter' when ready to upload.");
+        $("input#noInventoryErrorCatchDivInput").prop("disabled", true);
+        $("p#noInventoryErrorCatchDivPrompt").html("You have not defined an inventory yet. <br> Press 'Enter' to return to menu.");
     } else if (counter === 1) {
-        var holdingVariable = JSON.parse($("div#textAreaDiv textarea").val());
-        inventory = holdingVariable.inventory;
-        console.log(inventory);
-        $("div#textAreaDiv textarea").val("");
-        $("div#textAreaDiv").hide();
-        $("p#uploadInputDivPrompt").html("Inventory uploaded. Remember to save when finished. Press 'Enter' to return to menu.");
+        resetValues();
+        runAFunction("div#menuInputDiv");
+        $("div.inputDiv:visible input").select();
+    }
+};
+
+function uploadInventory() {
+    counterLogic();
+    console.log(counter);
+    console.log("inventoryObject is undefined: " + (inventoryObject === undefined));
+    if (counter === 0) {
+        if (inventoryObject !== undefined) {
+            $("input#uploadInputDivInput").prop('disabled', true);
+            $("p#uploadInputDivPrompt").html("You are already working with an inventory. <br> Press 'Enter' to return to menu.");
+            counter++;
+        } else if (inventoryObject === undefined) {
+            $("div#textAreaDiv").show();
+            $("input#uploadInputDivInput").prop('disabled', true);
+            $("p#uploadInputDivPrompt").html("Please paste in your JSON text. <br> Press 'Enter' when ready to upload.");
+        }
+    } else if (counter === 1) {
+        if (inventoryObject !== undefined) {
+            resetValues();
+            runAFunction("div#menuInputDiv");
+            $("div.inputDiv:visible input").select();
+        } else if (inventoryObject === undefined) {
+            inventoryObject = JSON.parse($("div#textAreaDiv textarea").val());
+            console.log(inventoryObject.inventory);
+            $("div#textAreaDiv textarea").val("");
+            $("div#textAreaDiv").hide();
+            $("p#uploadInputDivPrompt").html("Inventory uploaded. " + inventoryObject.inventory.length + " items in array. <br> Remember to save when finished. Press 'Enter' to return to menu.");
+        }
     } else if (counter === 2) {
         resetValues();
         runAFunction("div#menuInputDiv");
