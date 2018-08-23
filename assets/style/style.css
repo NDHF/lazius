@@ -47,6 +47,18 @@ div.inputDiv {
     margin-right: auto;
 }
 
+div#textAreaDiv, textarea {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+textarea {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+
 /* .inline {
     display: inline;
 } */

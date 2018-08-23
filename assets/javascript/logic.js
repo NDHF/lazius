@@ -1,44 +1,44 @@
 // LAZIUS (LOT-ZEE-US), AN INVENTORY PROGRAM
 // Lazius allows a user to manipulate an inventory using a browser interface. 
 
-// This is a dummy inventory with objects already inside, for use while designing the program. 
-var inventory = [{
-        Title: "Moby-Dick",
-        Author: "Melville, Herman",
-        Subject: "Fiction",
-        SubSubject: "Classics",
-        Location: "Closet Bookshelf",
-        Quantity: 1,
-        ID: 1
-    },
-    {
-        Title: "Desperation",
-        Author: "King, Stephen",
-        Subject: "Fiction",
-        SubSubject: "Horror Fiction",
-        Location: "Main Bookshelf",
-        Quantity: 1,
-        ID: 2
-    },
-    {
-        Title: "Tale of Despereaux, The",
-        Author: "DiCamillo, Kate",
-        Subject: "Fiction",
-        SubSubject: "Children's Fiction",
-        Location: "Main Bookshelf",
-        Quantity: 2,
-        ID: 3
-    },
-    {
-        Title: "Zen and the Art of Motorcycle Maintenance",
-        Author: "Pirsig, Robert M.",
-        Subject: "Philosophy",
-        SubSubject: "Metaphysics of Quality",
-        Location: "Main Bookshelf",
-        Quantity: 1,
-        ID: 4
-    }
-];
+// // This is a dummy inventory with objects already inside, for use while designing the program. 
+// var inventory = [{
+//         Title: "Moby-Dick",
+//         Author: "Melville, Herman",
+//         Subject: "Fiction",
+//         SubSubject: "Classics",
+//         Location: "Closet Bookshelf",
+//         Quantity: 1,
+//         ID: 1
+//     },
+//     {
+//         Title: "Desperation",
+//         Author: "King, Stephen",
+//         Subject: "Fiction",
+//         SubSubject: "Horror Fiction",
+//         Location: "Main Bookshelf",
+//         Quantity: 1,
+//         ID: 2
+//     },
+//     {
+//         Title: "Tale of Despereaux, The",
+//         Author: "DiCamillo, Kate",
+//         Subject: "Fiction",
+//         SubSubject: "Children's Fiction",
+//         Location: "Main Bookshelf",
+//         Quantity: 2,
+//         ID: 3
+//     },
+//     {
+//         Title: "Zen and the Art of Motorcycle Maintenance",
+//         Author: "Pirsig, Robert M.",
+//         Subject: "Philosophy",
+//         SubSubject: "Metaphysics of Quality",
+//         Location: "Main Bookshelf",
+//         Quantity: 1,
+//         ID: 4
+//     }
+// ];
 
 // var inventory = [];
 
@@ -128,6 +128,8 @@ function createInputDivs() {
     createInputDiv("addInputDiv", "addInputDivPrompt", "", "addInputDivInput");
     createInputDiv("searchInputDiv", "searchInputDivPrompt", "", "searchInputDivInput");
     createInputDiv("editQuantityDiv", "editQuantityDivPrompt", "", "editQuantityDivInput");
+    createInputDiv("uploadInputDiv", "uploadInputDivPrompt", "", "uploadInputDivInput");
+    createInputDiv("printInputDiv", "printInputDivPrompt", "", "printInputDivInput");
 };
 
 function programStart() {
@@ -135,6 +137,7 @@ function programStart() {
     runAFunction("div#menuInputDiv");
     createResultsTableDiv();
     createParametersList();
+    createTextAreaDiv();
 };
 
 function runAFunction(divToShow, functionToRun) {
@@ -150,7 +153,7 @@ function runAFunction(divToShow, functionToRun) {
 };
 
 function quitToMenuLogic() {
-    if ($("div.inputDiv:visible input").val() === "quit") {
+    if (($("div.inputDiv:visible input").val() === "quit")) {
         resetValues();
         runAFunction("div#menuInputDiv");
         $("div.inputDiv:visible input").select();
@@ -172,6 +175,10 @@ $(document).on("keydown", function (event) {
             runAFunction("div#searchInputDiv", searchInventory);
         } else if (($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "edit")) || ($("div#editQuantityDiv").is(":visible") && ($("input#editQuantityDivInput").val() !== "quit"))) {
             runAFunction("div#editQuantityDiv", editQuantity);
+        } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "print") || $("div#printInputDiv").is(":visible")) {
+            runAFunction("div#printInputDiv", printInventory);
+        } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "upload") || ($("div#uploadInputDiv").is(":visible"))) {
+            runAFunction($("div#uploadInputDiv", uploadInventory))
         } else if ($("div#menuInputDiv").is(":visible") && ($("input#menuInputDivInput").val() === "param")) {
             $("input.activeTextInput").val("");
             $("div#parametersDiv").show();
@@ -200,6 +207,21 @@ function resetValues() {
     indexToBeEdited = [];
 };
 
+// function pullFromFirebase() {
+//     console.log("pullFromFirebase was called");
+//     inventory = [];
+//     dataRef.ref().on("value", function(snapshot) {
+//         var firebaseSnapshot = snapshot.val();
+//         for (var i = 0; i < Object.keys(firebaseSnapshot).length; i++) {
+//             inventory.push(firebaseSnapshot[Object.keys(firebaseSnapshot)[i]]);
+//         }
+//         // console.log(inventory);
+//         firebaseSnapshot = {};
+//       }, function (errorObject) {
+//         console.log("The read failed: " + errorObject.code);
+//       });
+// };
+
 function searchInventory() {
     $("div#parametersDiv").show();
     $("div#resultsTableDiv").hide();
@@ -218,7 +240,9 @@ function searchInventory() {
         searchInputArray.push($("input#searchInputDivInput").val());
     }
     $("input#searchInputDivInput").val("");
-    if (counter === itemSearchPrompts.length) {
+    if (counter === 0) {
+    } else if (counter === itemSearchPrompts.length) {
+        console.log(inventory);
         $("p#searchInputDivPrompt").html("Hit 'Enter' to search again.");
         $("input#searchInputDivInput").prop('disabled', true);
         if (searchInputArray[0] === "") {
@@ -326,6 +350,7 @@ function addToInventory() {
         DateStamp: book.DateStamp
     }
     inventory.push(book);
+    // dataRef.ref().push(book);
     console.log(inventory);
     resetValues();
     getInformation();
@@ -348,8 +373,7 @@ function editQuantity() {
     counterLogic();
     console.log("counter: " + counter);
     $("p#editQuantityDivPrompt").html(editQuantityPromptArray[counter]);
-    if (counter === 0) {
-    } else if (counter === 1) {
+    if (counter === 0) {} else if (counter === 1) {
         for (var i = 0; i < inventory.length; i++) {
             if (inventory[i].ID === parseInt(editQuantityInputValue)) {
                 indexToBeEdited = i;
@@ -397,4 +421,56 @@ function editQuantity() {
         resetValues();
     }
     $("input#editQuantityDivInput").val("");
+};
+
+function createTextAreaDiv() {
+    var textAreaDiv = $("<div>");
+    textAreaDiv.attr("id", "textAreaDiv");
+    var textArea = $("<textarea>");
+    textArea.attr("id", "textArea");
+    textArea.attr("rows", "4");
+    textArea.attr("cols", "50");
+    textAreaDiv.append(textArea);
+    textAreaDiv.insertAfter("div#commandMenuDiv");
+    textAreaDiv.hide();
+}
+
+function printInventory() {
+    counterLogic();
+    if (counter === 0) {
+        $("div#textAreaDiv").show();
+        $("input#printInputDivInput").prop('disabled', true);
+        console.log(inventory);
+        var inventoryObject = {
+            inventory: inventory
+        }
+        $("div#textAreaDiv textarea").val(JSON.stringify(inventoryObject));
+        $("div#textAreaDiv textarea").select();
+        document.execCommand("copy");
+        $("div#textAreaDiv").hide();
+        $("p#printInputDivPrompt").html("Your JSON text has been copied. Please save it to a file. Press 'Enter' to return to menu.");
+    } else if (counter === 1) {
+        resetValues();
+        runAFunction("div#menuInputDiv");
+        $("div.inputDiv:visible input").select();
+    }
+};
+function uploadInventory() {
+    counterLogic();
+    if (counter === 0) {
+        $("div#textAreaDiv").show();
+        $("input#uploadInputDivInput").prop('disabled', true);
+        $("p#uploadInputDivPrompt").html("Please paste in your JSON text. Press 'Enter' when ready to upload.");
+    } else if (counter === 1) {
+        var holdingVariable = JSON.parse($("div#textAreaDiv textarea").val());
+        inventory = holdingVariable.inventory;
+        console.log(inventory);
+        $("div#textAreaDiv textarea").val("");
+        $("div#textAreaDiv").hide();
+        $("p#uploadInputDivPrompt").html("Inventory uploaded. Remember to save when finished. Press 'Enter' to return to menu.");
+    } else if (counter === 2) {
+        resetValues();
+        runAFunction("div#menuInputDiv");
+        $("div.inputDiv:visible input").select();
+    }
 };

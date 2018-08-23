@@ -15,6 +15,8 @@ A simple inventory project
 
 * Inventory Tracking: An inventory wouldn't be much good without a way to track it. Every time a user updates an item's quantity, the data on the quantity change is stored within the object.
 
+* Basic File Import and Export: the inventory can be imported and exported as the JSON format. The 'upload' function will allow the user to paste stringified JSON into a text area. This is then taken into the program, and used as the inventory variable. When work is done, a stringified copy may be copied to the user's clipboard, and pasted into a text file. Here is the structure of each object in the inventory:
+
 # Methods Used
 
 * The design was informed by a pure need for speed. There is a single input field, and everything, from data entry to calling functions, requires only the input field and the Enter key. This requires a main function that is called each time the Enter key is pressed, and uses the vales in the input field to choose which function to call. For example, typing 'quit' and then hitting Enter will always return the user to the main menu. 
@@ -33,6 +35,7 @@ A simple inventory project
 * I would like to add auto-capitalize, which might save some time on hitting the Shift key.
 * I could build a show-all function, that would display all items in the inventory.
 * Various functions for running reports would be useful.
+* Check if an item already exists in inventory.
 
 # Acknowledgements
 
