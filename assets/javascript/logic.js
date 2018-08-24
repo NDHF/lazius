@@ -1,23 +1,7 @@
 // LAZIUS (LOT-ZEE-US), AN INVENTORY PROGRAM
 // Lazius allows a user to manipulate an inventory using a browser interface. 
 
-var itemSearchPrompts = [
-    "What parameter would you like to use?",
-    "What is the value of that parameter?",
-    "Is there a second parameter you would like to use?",
-    "What is the value of that parameter?"
-];
-
-var editQuantityPromptArray = [
-    "Enter item ID:",
-    "Would you like to add or deduct?",
-    "By how many?",
-    "Entrant's Initials",
-];
-
-var add;
-
-var searchInputArray = [];
+// GLOBAL VARIABLES START
 
 // Any parameters may be used here.
 // The logic for adding items requires that the last user input be a three-letter inital.
@@ -28,11 +12,17 @@ var itemParameters = ["Title", "Author", "Subject", "SubSubject", "Location", "Q
 
 var itemPropertyInput = [];
 
+var add;
+
+var searchInputArray = [];
+
 var counter;
 
 var inventoryObject;
 
 var indexToBeEdited;
+
+// GLOBAL VARIABLES END
 
 programStart();
 
@@ -185,6 +175,12 @@ function resetValues() {
 };
 
 function searchInventory() {
+    var itemSearchPrompts = [
+        "What parameter would you like to use?",
+        "What is the value of that parameter?",
+        "Is there a second parameter you would like to use?",
+        "What is the value of that parameter?"
+    ];
     $("div#parametersDiv").show();
     $("div#resultsTableDiv").hide();
     $("p#searchResultsString").hide();
@@ -202,7 +198,7 @@ function searchInventory() {
         searchInputArray.push($("input#searchInputDivInput").val());
     }
     $("input#searchInputDivInput").val("");
-    if (counter === 0 && inventoryObject === undefined) {} else if (counter === itemSearchPrompts.length) {
+    if (counter === itemSearchPrompts.length) {
         console.log(inventoryObject.inventory);
         $("p#searchInputDivPrompt").html("Hit 'Enter' to search again.");
         $("input#searchInputDivInput").prop('disabled', true);
@@ -215,7 +211,7 @@ function searchInventory() {
                     searchResults.push(inventory[i]);
                 }
             } else if (searchInputArray[2] === "no") {
-                if (inventory[i][searchInputArray[0]] === searchInputArray[1]) {
+                if (inventoryObject.inventory[i][searchInputArray[0]] === searchInputArray[1]) {
                     searchResults.push(inventoryObject.inventory[i]);
                 }
             }
@@ -325,6 +321,12 @@ function addToInventory() {
 
 function editQuantity() {
     var editQuantityInputValue = $("input#editQuantityDivInput").val();
+    var editQuantityPromptArray = [
+        "Enter item ID:",
+        "Would you like to add or deduct?",
+        "By how many?",
+        "Entrant's Initials",
+    ];
     var editQuantityMessages = {
         pleaseAddOrDeduct: "Please enter 'add' or 'deduct",
         enterDifferentValue: "Please enter a different value",
